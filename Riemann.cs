@@ -119,17 +119,32 @@ namespace riemann {
 						Datagram.Send(array);
 					} catch (SocketException se) {
 						if (se.ErrorCode == SocketExceptionErrorCodeMessageTooLong) {
-					var x = BitConverter.GetBytes(array.Length);
-					Array.Reverse(x);
-					Stream.Write(x, 0, 4);
-					Stream.Write(array, 0, array.Length);
-					Stream.Flush();
+							var x = BitConverter.GetBytes(array.Length);
+							Array.Reverse(x);
+							Stream.Write(x, 0, 4);
+							Stream.Write(array, 0, array.Length);
+							Stream.Flush();
+							var response = Serializer.Deserialize<Msg>(Stream);
+							if (!response.ok) {
+								throw new Exception(response.error);
+							}
 						} else {
 							throw;
 						}
 					}
 				}
 			}
+		}
+
+		public IEnumerable<State> Query(string query) {
+			var q = new Query {@string = query};
+			var msg = new Msg {query = q};
+			Serializer.Serialize(Stream, msg);
+			var response = Serializer.Deserialize<Msg>(Stream);
+			if (response.ok) {
+				return response.states;
+			}
+			throw new Exception(response.error);
 		}
 	}
 }

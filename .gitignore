@@ -10,3 +10,6 @@ _Resharper.*
 
 # Visual Studio files
 *.suo
+
+# nuget packages
+packages

@@ -61,11 +61,11 @@ namespace riemann {
 			}
 		}
 
-		public IDisposable Tick(int tickTimeInSeconds, string service, Func<Tuple<string, string, float>> onTick) {
+		public IDisposable Tick(int tickTimeInSeconds, string service, Func<TickEvent> onTick) {
 			var timer = new Timer(
 				_ => {
 					var t = onTick();
-					SendEvent(service, t.Item1, t.Item2, t.Item3, tickTimeInSeconds);
+					SendEvent(service, t.State, t.Description, t.MetricValue, tickTimeInSeconds);
 				});
 			timer.Change(TimeSpan.FromSeconds(tickTimeInSeconds), TimeSpan.FromSeconds(tickTimeInSeconds));
 			return timer;

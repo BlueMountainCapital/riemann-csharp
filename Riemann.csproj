@@ -48,9 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Event.cs" />
     <Compile Include="TickEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Riemann.cs" />
+    <Compile Include="Client.cs" />
     <Compile Include="Riemann.pb.cs" />
   </ItemGroup>
   <ItemGroup>

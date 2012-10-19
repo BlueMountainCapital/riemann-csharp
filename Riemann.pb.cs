@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 // Generated from: Riemann.proto
-namespace Riemann
+namespace Riemann.Proto
 {
   [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"State")]
   public partial class State : global::ProtoBuf.IExtensible

@@ -6,17 +6,17 @@ using System.Net.Sockets;
 using System.Threading;
 using ProtoBuf;
 
-namespace riemann {
-	public class Riemann {
+namespace Riemann {
+	public class Client {
 		private RiemannTags _tag;
 		private readonly object _tagLock = new object();
 
 		private class RiemannTags : IDisposable {
-			private readonly Riemann _owner;
+			private readonly Client _owner;
 			private readonly RiemannTags _underlying;
 			private readonly string _tag;
 
-			public RiemannTags(Riemann owner, RiemannTags underlying, string tag) {
+			public RiemannTags(Client owner, RiemannTags underlying, string tag) {
 				_owner = owner;
 				_underlying = underlying;
 				_tag = tag;
@@ -47,7 +47,7 @@ namespace riemann {
 			return string.Format("{0}.{1}", properties.HostName, properties.DomainName);
 		}
 
-		public Riemann(string host, ushort port) {
+		public Client(string host, ushort port) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;

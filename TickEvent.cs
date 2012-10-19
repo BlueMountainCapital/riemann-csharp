@@ -1,4 +1,4 @@
-﻿namespace riemann {
+﻿namespace Riemann {
 	public struct TickEvent {
 		public TickEvent(string state, string description, float metricValue) {
 			State = state;

@@ -113,7 +113,7 @@ namespace Riemann {
 					removals.Add(tick);
 				}
 				tick.NextTick = tick.NextTick - 1;
-				if (tick.NextTick == 0) {
+				if (tick.NextTick <= 0) {
 					var t = tick.Tick();
 					events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime));
 					tick.NextTick = tick.TickTime;

@@ -8,7 +8,7 @@ using System.Threading;
 using ProtoBuf;
 
 namespace Riemann {
-	public class Client {
+	public class Client : IDisposable {
 		private RiemannTags _tag;
 		private readonly object _tagLock = new object();
 
@@ -219,6 +219,22 @@ namespace Riemann {
 				return response.states;
 			}
 			throw new Exception(response.error);
+		}
+
+		public void Dispose() {
+			if (_writer.IsValueCreated) {
+				_writer.Value.Close();
+				_writer.Value.Dispose();
+			}
+			if (_datagram.IsValueCreated) {
+				_datagram.Value.Close();
+				_datagram.Value.Dispose();
+			}
+			GC.SuppressFinalize(this);
+		}
+
+		~Client() {
+			Dispose();
 		}
 	}
 }

@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>{{ page.title }}</title>
+    <link rel="stylesheet" href="{{ site.url }}/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ site.url }}/highlight.js/solarized_dark.css">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="span3">
+	<div style="text-align:right;color:#0067aa;">
+	  <h1>riemann.cs</h1>
+	  <ul class="nav nav-pills nav-stacked">
+	    <li><a href="{{ site.url }}/">home</a></li>
+	    <li><a href="{{ site.url }}/api.html">api</a></li>
+	  </ul>
+	</div>
+      </div>
+      <div class="span9">
+	{{ content }}
+      </div>
+    </div>
+    <script src="{{ site.url }}/highlight.js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </body>
+</html>

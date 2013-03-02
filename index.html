@@ -1,0 +1,39 @@
+---
+layout: page
+title: riemann.cs
+---
+
+<p class="lead">
+A simple, open source <a href="http://riemann.io/">Riemann</a> client for C#. 
+</p>
+
+<p>
+If an event is one-time, use SendEvent to push events to Riemann.
+</p>
+
+<p>
+To send a value every n seconds, use the Tick method. riemann.cs will
+call you back every n seconds to get a new value, then send all of the
+events together.
+<p>
+
+<pre>
+<code class="cs" style="border-radius:10px">
+var client = new Riemann.Client("localhost", 5555);
+var count = 0L;
+client.Tick(10, "myservice.count", () => {
+   var now = Interlocked.Exchange(ref count, 0L);
+   return new TickEvent(now > 10 ? "warning" : "ok", "", now);
+});
+client.SendEvent("myservice.loaded", "ok", "Service loaded", 0.0);
+</code>
+</pre>
+
+<h2>License</h2>
+
+<p>
+riemann.cs is Apache Licensed, so you can get the source, and easily
+extend it. For more on the Apache License,
+see <a href="http://www.apache.org/licenses/LICENSE-2.0">
+http://www.apache.org/licenses/LICENSE-2.0</a>
+<p>

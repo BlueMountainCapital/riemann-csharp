@@ -8,6 +8,9 @@ using System.Threading;
 using ProtoBuf;
 
 namespace Riemann {
+	///
+	/// <summary>Client represents a connection to the Riemann service.</summary>
+	///
 	public class Client : IDisposable {
 		private RiemannTags _tag;
 		private readonly object _tagLock = new object();
@@ -48,13 +51,22 @@ namespace Riemann {
 			return string.Format("{0}.{1}", properties.HostName, properties.DomainName);
 		}
 
-		public Client(string host, ushort port) {
+		///
+		/// <summary>Constructs a new Client with the specified host, port</summary>
+		/// <param name='host'>Remote hostname to connect to. Default: localhost</param>
+		/// <param name='port'>Port to connect to. Default: 5555</param>
+		///
+		public Client(string host = "localhost", ushort port = 5555) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;
 			_port = port;
 		}
 
+		///
+		/// <summary>Adds a tag to the current context (relative to this client). This call is not thread-safe.</summary>
+		/// <param name='tag'>New tag to add to the Riemann events sent using this client.</param>
+		///
 		public IDisposable Tag(string tag) {
 			lock (_tagLock) {
 				_tag = new RiemannTags(this, _tag, tag);
@@ -88,6 +100,21 @@ namespace Riemann {
 		private Timer _timer;
 		private List<TickDisposable> _ticks;
 
+		///
+		/// <summary>
+		/// After <paramref name="tickTimeInSeconds" /> seconds, <paramref name="onTick" /> will be invoked.
+		/// The resulting <see cref="TickEvent" /> is composed with the <paramref name="service" /> to generate an Event.
+		/// </summary>
+		/// <param name="tickTimeInSeconds">
+		/// Number of seconds to wait before calling the event back.
+		/// <note>Because only a single thread calls the events back, it may be called back sooner.</note>
+		/// </param>
+		/// <param name="service">Name of the service to send to Riemann</param>
+		/// <param name="onTick">Function to call back after wait period</param>
+		/// <returns>
+		/// A disposable that, if called, will remove this callback from getting called.
+		/// <note>An additional tick may elapse after removal, due to the multithreaded nature.</note>
+		/// </returns>
 		public IDisposable Tick(int tickTimeInSeconds, string service, Func<TickEvent> onTick) {
 			var disposable = new TickDisposable(tickTimeInSeconds, service, onTick);
 			lock(_timerLock) {
@@ -161,6 +188,13 @@ namespace Riemann {
 			get { return _datagram.Value; }
 		}
 
+		///
+		/// <summary>Send many events to Riemann at once.</summary>
+		/// <param name="events">
+		/// Enumerable of the events to process.
+		/// Enumerable will be enumerated after being passed in.
+		/// </param>
+		///
 		public void SendEvents(IEnumerable<Event> events) {
 			var tags = new List<string>();
 			lock (_tagLock) {
@@ -205,11 +239,27 @@ namespace Riemann {
 			}
 		}
 
+		///
+		/// <summary>Send a single event to Riemann.</summary>
+		/// <param name='service'>Name of the service to push.</param>
+		/// <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
+		/// <param name='description'>
+		/// A description of the current state, if applicable.
+		/// Use null or an empty string to denote no additional information.
+		/// </param>
+		/// <param name='metric'>A value related to the service.</param>
+		/// <param name='ttl'>Number of seconds this event will be applicable for.</param>
+		///
 		public void SendEvent(string service, string state, string description, float metric, int ttl = 0) {
 			var ev = new Event(service, state, description, metric, ttl);
 			SendEvents(new[] {ev});
 		}
 
+		///
+		/// <summary>Queries Riemann</summary>
+		/// <param name='query'>Query to send Riemann for process</param>
+		/// <returns>List of States that answer the query.</returns>
+		///
 		public IEnumerable<Proto.State> Query(string query) {
 			var q = new Proto.Query {@string = query};
 			var msg = new Proto.Msg {query = q};
@@ -221,6 +271,9 @@ namespace Riemann {
 			throw new Exception(response.error);
 		}
 
+		///
+		/// <summary>Cleans up state related to this client.</summary>
+		///
 		public void Dispose() {
 			if (_writer.IsValueCreated) {
 				_writer.Value.Close();
@@ -233,6 +286,9 @@ namespace Riemann {
 			GC.SuppressFinalize(this);
 		}
 
+		///
+		/// <summary>Closes connections.</summary>
+		///
 		~Client() {
 			Dispose();
 		}

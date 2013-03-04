@@ -58,7 +58,7 @@ namespace Riemann {
 		/// <param name='port'>Port to connect to. Default: 5555</param>
 		/// <param name='throwExceptionOnTicks'>Throw an exception on the background thread managing the TickEvents. Default: true</param>
 		///
-		public Client(string host = 'localhost', ushort port = 5555, bool throwExceptionOnTicks = true) {
+		public Client(string host = "localhost", ushort port = 5555, bool throwExceptionOnTicks = true) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;
@@ -173,7 +173,7 @@ namespace Riemann {
 
 		private readonly Lazy<Stream> _writer;
 		private readonly Lazy<Socket> _datagram;
-		private const int SocketExceptionErrorCodeMessageTooLong = 10040;
+		private const SocketError SocketErrorMessageTooLong = SocketError.MessageSize;
 
 		private Stream MakeStream() {
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -230,7 +230,7 @@ namespace Riemann {
 			try {
 				Datagram.Send(array);
 			} catch (SocketException se) {
-				if (se.ErrorCode == SocketExceptionErrorCodeMessageTooLong) {
+				if (se.SocketErrorCode == SocketErrorMessageTooLong) {
 					var x = BitConverter.GetBytes(array.Length);
 					Array.Reverse(x);
 					Stream.Write(x, 0, 4);

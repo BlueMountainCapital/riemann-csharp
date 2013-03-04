@@ -45,6 +45,7 @@ namespace Riemann {
 		private readonly string _host;
 		private readonly ushort _port;
 		private readonly string _name = GetFqdn();
+		private readonly bool _throwExceptionsOnTicks;
 
 		private static string GetFqdn() {
 			var properties = IPGlobalProperties.GetIPGlobalProperties();
@@ -55,12 +56,14 @@ namespace Riemann {
 		/// <summary>Constructs a new Client with the specified host, port</summary>
 		/// <param name='host'>Remote hostname to connect to. Default: localhost</param>
 		/// <param name='port'>Port to connect to. Default: 5555</param>
+		/// <param name='throwExceptionOnTicks'>Throw an exception on the background thread managing the TickEvents. Default: true</param>
 		///
-		public Client(string host = "localhost", ushort port = 5555) {
+		public Client(string host = 'localhost', ushort port = 5555, bool throwExceptionOnTicks = true) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;
 			_port = port;
+			_throwExceptionsOnTicks = throwExceptionOnTicks;
 		}
 
 		///
@@ -129,38 +132,42 @@ namespace Riemann {
 		}
 
 		private void ProcessTicks() {
-			var events = new List<Event>();
-			List<TickDisposable> ticks;
-			lock(_timerLock) {
-				ticks = _ticks.ToList();
-			}
-			var removals = new List<TickDisposable>();
-			foreach (var tick in ticks) {
-				if (tick.RemoveRequested) {
-					removals.Add(tick);
+			try {
+				var events = new List<Event>();
+				List<TickDisposable> ticks;
+				lock (_timerLock) {
+					ticks = _ticks.ToList();
 				}
-				tick.NextTick = tick.NextTick - 1;
-				if (tick.NextTick <= 0) {
-					var t = tick.Tick();
-					events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime));
-					tick.NextTick = tick.TickTime;
+				var removals = new List<TickDisposable>();
+				foreach (var tick in ticks) {
+					if (tick.RemoveRequested) {
+						removals.Add(tick);
+					}
+					tick.NextTick = tick.NextTick - 1;
+					if (tick.NextTick <= 0) {
+						var t = tick.Tick();
+						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime));
+						tick.NextTick = tick.TickTime;
+					}
 				}
-			}
-			if (removals.Count > 0) {
-				lock(_timerLock) {
-					if (removals.Count == _ticks.Count) {
-						_ticks = null;
-						_timer.Dispose();
-						_timer = null;
-					} else {
-						foreach (var removal in removals) {
-							_ticks.Remove(removal);
+				if (removals.Count > 0) {
+					lock (_timerLock) {
+						if (removals.Count == _ticks.Count) {
+							_ticks = null;
+							_timer.Dispose();
+							_timer = null;
+						} else {
+							foreach (var removal in removals) {
+								_ticks.Remove(removal);
+							}
 						}
 					}
 				}
-			}
-			if (events.Count > 0) {
-				SendEvents(events);
+				if (events.Count > 0) {
+					SendEvents(events);
+				}
+			} catch {
+				if (_throwExceptionsOnTicks) throw;
 			}
 		}
 

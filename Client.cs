@@ -146,7 +146,7 @@ namespace Riemann {
 					tick.NextTick = tick.NextTick - 1;
 					if (tick.NextTick <= 0) {
 						var t = tick.Tick();
-						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime));
+						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime * 2));
 						tick.NextTick = tick.TickTime;
 					}
 				}

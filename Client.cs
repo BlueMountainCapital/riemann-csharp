@@ -58,11 +58,11 @@ namespace Riemann {
 		/// <param name='port'>Port to connect to. Default: 5555</param>
 		/// <param name='throwExceptionOnTicks'>Throw an exception on the background thread managing the TickEvents. Default: true</param>
 		///
-		public Client(string host = "localhost", ushort port = 5555, bool throwExceptionOnTicks = true) {
+		public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;
-			_port = port;
+			_port = (ushort)port;
 			_throwExceptionsOnTicks = throwExceptionOnTicks;
 		}
 

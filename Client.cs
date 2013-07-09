@@ -210,18 +210,24 @@ namespace Riemann {
 				}
 			}
 			var protoEvents = events.Select(
-				e => new Proto.Event {
-					host = _name,
-					service = e.Service,
-					state = e.State,
-					description = e.Description,
-					metric_f = e.Metric,
-					ttl = e.TTL
+				e =>  {
+                    var evnt = new Proto.Event
+                    {
+                        host = _name,
+                        service = e.Service,
+                        state = e.State,
+                        description = e.Description,
+                        metric_f = e.Metric,
+                        ttl = e.TTL
+                    };
+                    evnt.tags.AddRange(e.Tags);
+                    return evnt;
 				}).ToList();
 
-			var message = new Proto.Msg();			
+			var message = new Proto.Msg();
 			foreach (var protoEvent in protoEvents) {
-				protoEvent.tags.AddRange(tags);
+                if(protoEvent.tags.Count == 0)
+				    protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
 			}
 			var memoryStream = new MemoryStream();

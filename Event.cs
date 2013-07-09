@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Riemann {
 	///
@@ -30,7 +31,11 @@ namespace Riemann {
 		///
 		public readonly int TTL;
 
-	        ///
+        /// 
+        /// <summary>Freeform list of strings, will override the tags set from the Client</summary>
+        /// 
+        public readonly IList<string> Tags;
+
 		/// <summary>Constructs an event</summary>
 		/// <param name="service">Service name</param>
 		/// <param name="state">Current status of the service.</param>
@@ -48,6 +53,7 @@ namespace Riemann {
 			Description = description;
 			Metric = metric;
 			TTL = ttl;
+            Tags = new List<string>();
 		}
 	}
 }

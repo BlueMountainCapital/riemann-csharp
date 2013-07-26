@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using ProtoBuf;
+using Riemann.Proto;
 
 namespace Riemann {
 	///
@@ -230,9 +231,7 @@ namespace Riemann {
 				    protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
 			}
-			var memoryStream = new MemoryStream();
-			Serializer.Serialize(memoryStream, message);
-			var array = memoryStream.ToArray();
+			var array = MessageBytes(message);
 			try {
 				Datagram.Send(array);
 			} catch (SocketException se) {
@@ -249,6 +248,14 @@ namespace Riemann {
 				} else {
 					throw;
 				}
+			}
+		}
+
+		private static byte[] MessageBytes(Msg message)
+		{
+			using (var memoryStream = new MemoryStream()) {
+				Serializer.Serialize(memoryStream, message);
+				return memoryStream.ToArray();
 			}
 		}
 

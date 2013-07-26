@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>riemann-csharp</id>
+    <version>#version#</version>
+    <authors>BlueMountain Capital</authors>
+    <owners>BlueMountain Capital</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <projectUrl>http://github.com/BlueMountainCapital/riemann-csharp</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A simple Riemann driver for C#</description>
+    <copyright>Copyright 2013</copyright>
+    <tags>Riemann metrics</tags>
+    <dependencies>
+      <dependency id="protobuf-net" version="2.0.0.480" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\bin\Debug\Riemann.dll" target="lib\net40" />
+    <file src="..\bin\Debug\Riemann.pdb" target="lib\net40" />
+  </files>
+</package>

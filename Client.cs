@@ -12,7 +12,8 @@ namespace Riemann {
 	///
 	/// <summary>Client represents a connection to the Riemann service.</summary>
 	///
-	public class Client : IDisposable {
+	public class Client : IDisposable, IClient
+	{
 		private RiemannTags _tag;
 		private readonly object _tagLock = new object();
 

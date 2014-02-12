@@ -48,6 +48,7 @@ namespace Riemann {
 		private readonly ushort _port;
 		private readonly string _name = GetFqdn();
 		private readonly bool _throwExceptionsOnTicks;
+	    private readonly bool _useTcp;
 
 		private static string GetFqdn() {
 			var properties = IPGlobalProperties.GetIPGlobalProperties();
@@ -59,13 +60,15 @@ namespace Riemann {
 		/// <param name='host'>Remote hostname to connect to. Default: localhost</param>
 		/// <param name='port'>Port to connect to. Default: 5555</param>
 		/// <param name='throwExceptionOnTicks'>Throw an exception on the background thread managing the TickEvents. Default: true</param>
+		/// <param name="useTcp">Use TCP for transport (UDP otherwise). Default: false</param>
 		///
-		public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true) {
+		public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true, bool useTcp = false) {
 			_writer = new Lazy<Stream>(MakeStream);
 			_datagram = new Lazy<Socket>(MakeDatagram);
 			_host = host;
 			_port = (ushort)port;
 			_throwExceptionsOnTicks = throwExceptionOnTicks;
+		    _useTcp = useTcp;
 		}
 
 		///
@@ -233,24 +236,30 @@ namespace Riemann {
 				message.events.Add(protoEvent);
 			}
 			var array = MessageBytes(message);
+
+		    if (_useTcp) {
+		        WriteToStream(array);
+		        return;
+		    }
+
 			try {
 				Datagram.Send(array);
 			} catch (SocketException se) {
 				if (se.SocketErrorCode == SocketErrorMessageTooLong) {
-					var x = BitConverter.GetBytes(array.Length);
-					Array.Reverse(x);
-					Stream.Write(x, 0, 4);
-					Stream.Write(array, 0, array.Length);
-					Stream.Flush();
-					var response = Serializer.Deserialize<Proto.Msg>(Stream);
-					if (!response.ok) {
-						throw new Exception(response.error);
-					}
+					WriteToStream(array);
 				} else {
 					throw;
 				}
 			}
 		}
+
+	    private void WriteToStream(Byte[] array) {
+            var x = BitConverter.GetBytes(array.Length);
+            Array.Reverse(x);
+            Stream.Write(x, 0, 4);
+            Stream.Write(array, 0, array.Length);
+            Stream.Flush();
+	    }
 
 		private static byte[] MessageBytes(Msg message)
 		{

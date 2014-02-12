@@ -45,8 +45,9 @@ namespace Riemann {
 		/// </param>
 		/// <param name='metric'>A value related to the service.</param>
 		/// <param name='ttl'>Number of seconds this event will be applicable for.</param>
+		/// <param name="tags">List of tags to associate with this event</param>
 		///
-		void SendEvent(string service, string state, string description, float metric, int ttl = 0);
+        void SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null);
 
 		///
 		/// <summary>Queries Riemann</summary>

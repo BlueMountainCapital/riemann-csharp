@@ -42,9 +42,10 @@ namespace Riemann {
 		/// <param name="description">Additional details regarding the state of the service.</param>
 		/// <param name="metric">A value which represents the state of the service.</param>
 		/// <param name="ttl">Amount of time the value will stay valid for a service.</param>
+		/// <param name="tags">List of tags to associate with this event</param>
 		/// <exception cref="ArgumentException">Length of state is more than 255 characters.</exception>
 		///
-		public Event(string service, string state, string description, float metric, int ttl = 0) {
+		public Event(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null) {
 			if (state.Length > 255) {
 				throw new ArgumentException("State parameter is too long, must be 255 characters or less", "state");
 			}
@@ -53,7 +54,7 @@ namespace Riemann {
 			Description = description;
 			Metric = metric;
 			TTL = ttl;
-            Tags = new List<string>();
+		    Tags = tags ?? new List<string>();
 		}
 	}
 }

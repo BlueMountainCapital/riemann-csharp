@@ -35,19 +35,21 @@ namespace Riemann {
 		///
 		void SendEvents(IEnumerable<Event> events);
 
-		///
-		/// <summary>Send a single event to Riemann.</summary>
-		/// <param name='service'>Name of the service to push.</param>
-		/// <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
-		/// <param name='description'>
-		/// A description of the current state, if applicable.
-		/// Use null or an empty string to denote no additional information.
-		/// </param>
-		/// <param name='metric'>A value related to the service.</param>
-		/// <param name='ttl'>Number of seconds this event will be applicable for.</param>
-		/// <param name="tags">List of tags to associate with this event</param>
-		///
-        void SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null);
+	    /// 
+	    ///  <summary>Send a single event to Riemann.</summary>
+	    /// <param name="host">Event source host</param>
+	    /// <param name='service'>Name of the service to push.</param>
+	    /// <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
+	    /// <param name='description'>
+	    ///  A description of the current state, if applicable.
+	    ///  Use null or an empty string to denote no additional information.
+	    /// </param>
+	    /// <param name='metric'>A value related to the service.</param>
+	    /// <param name='ttl'>Number of seconds this event will be applicable for.</param>
+	    /// <param name="tags">List of tags to associate with this event</param>
+	    /// <param name="attributes">Optional arbitrary name/value string content</param>
+	    void SendEvent(string host, string service, string state, string description, float metric, int ttl = 0, 
+            List<string> tags = null, Dictionary<string, string> attributes = null);
 
 		///
 		/// <summary>Queries Riemann</summary>

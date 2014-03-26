@@ -15,7 +15,6 @@ namespace Riemann.Proto
   {
     public State() {}
     
-
     private long _time = default(long);
     [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"time", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
     [global::System.ComponentModel.DefaultValue(default(long))]
@@ -24,7 +23,6 @@ namespace Riemann.Proto
       get { return _time; }
       set { _time = value; }
     }
-
     private string _state = "";
     [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"state", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -33,7 +31,6 @@ namespace Riemann.Proto
       get { return _state; }
       set { _state = value; }
     }
-
     private string _service = "";
     [global::ProtoBuf.ProtoMember(3, IsRequired = false, Name=@"service", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -42,7 +39,6 @@ namespace Riemann.Proto
       get { return _service; }
       set { _service = value; }
     }
-
     private string _host = "";
     [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"host", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -51,7 +47,6 @@ namespace Riemann.Proto
       get { return _host; }
       set { _host = value; }
     }
-
     private string _description = "";
     [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"description", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -60,7 +55,6 @@ namespace Riemann.Proto
       get { return _description; }
       set { _description = value; }
     }
-
     private bool _once = default(bool);
     [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"once", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue(default(bool))]
@@ -76,7 +70,6 @@ namespace Riemann.Proto
       get { return _tags; }
     }
   
-
     private float _ttl = default(float);
     [global::ProtoBuf.ProtoMember(8, IsRequired = false, Name=@"ttl", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
     [global::System.ComponentModel.DefaultValue(default(float))]
@@ -85,7 +78,6 @@ namespace Riemann.Proto
       get { return _ttl; }
       set { _ttl = value; }
     }
-
     private float _metric_f = float.NaN;
     [global::ProtoBuf.ProtoMember(15, IsRequired = false, Name=@"metric_f", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
     [global::System.ComponentModel.DefaultValue(float.NaN)]
@@ -104,7 +96,6 @@ namespace Riemann.Proto
   {
     public Event() {}
     
-
     private long _time = default(long);
     [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"time", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
     [global::System.ComponentModel.DefaultValue(default(long))]
@@ -113,7 +104,6 @@ namespace Riemann.Proto
       get { return _time; }
       set { _time = value; }
     }
-
     private string _state = "";
     [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"state", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -122,7 +112,6 @@ namespace Riemann.Proto
       get { return _state; }
       set { _state = value; }
     }
-
     private string _service = "";
     [global::ProtoBuf.ProtoMember(3, IsRequired = false, Name=@"service", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -131,7 +120,6 @@ namespace Riemann.Proto
       get { return _service; }
       set { _service = value; }
     }
-
     private string _host = "";
     [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"host", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -140,7 +128,6 @@ namespace Riemann.Proto
       get { return _host; }
       set { _host = value; }
     }
-
     private string _description = "";
     [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"description", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -156,7 +143,6 @@ namespace Riemann.Proto
       get { return _tags; }
     }
   
-
     private float _ttl = default(float);
     [global::ProtoBuf.ProtoMember(8, IsRequired = false, Name=@"ttl", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
     [global::System.ComponentModel.DefaultValue(default(float))]
@@ -165,9 +151,31 @@ namespace Riemann.Proto
       get { return _ttl; }
       set { _ttl = value; }
     }
-
+    private readonly global::System.Collections.Generic.List<Attribute> _attributes = new global::System.Collections.Generic.List<Attribute>();
+    [global::ProtoBuf.ProtoMember(9, Name=@"attributes", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public global::System.Collections.Generic.List<Attribute> attributes
+    {
+      get { return _attributes; }
+    }
+  
+    private long _metric_sint64 = default(long);
+    [global::ProtoBuf.ProtoMember(13, IsRequired = false, Name=@"metric_sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
+    [global::System.ComponentModel.DefaultValue(default(long))]
+    public long metric_sint64
+    {
+      get { return _metric_sint64; }
+      set { _metric_sint64 = value; }
+    }
+    private double _metric_d = default(double);
+    [global::ProtoBuf.ProtoMember(14, IsRequired = false, Name=@"metric_d", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    [global::System.ComponentModel.DefaultValue(default(double))]
+    public double metric_d
+    {
+      get { return _metric_d; }
+      set { _metric_d = value; }
+    }      
     private float _metric_f = float.NaN;
-    [global::ProtoBuf.ProtoMember(15, IsRequired = false, Name=@"metric_f", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
+    [global::ProtoBuf.ProtoMember(15, IsRequired = false, Name=@"metric_f", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]    
     [global::System.ComponentModel.DefaultValue(float.NaN)]
     public float metric_f
     {
@@ -184,7 +192,6 @@ namespace Riemann.Proto
   {
     public Query() {}
     
-
     private string _string = "";
     [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"string", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -203,7 +210,6 @@ namespace Riemann.Proto
   {
     public Msg() {}
     
-
     private bool _ok = default(bool);
     [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"ok", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue(default(bool))]
@@ -212,7 +218,6 @@ namespace Riemann.Proto
       get { return _ok; }
       set { _ok = value; }
     }
-
     private string _error = "";
     [global::ProtoBuf.ProtoMember(3, IsRequired = false, Name=@"error", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
@@ -228,7 +233,6 @@ namespace Riemann.Proto
       get { return _states; }
     }
   
-
     private Query _query = null;
     [global::ProtoBuf.ProtoMember(5, IsRequired = false, Name=@"query", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue(null)]
@@ -244,6 +248,31 @@ namespace Riemann.Proto
       get { return _events; }
     }
   
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"Attribute")]
+  public partial class Attribute : global::ProtoBuf.IExtensible
+  {
+    public Attribute() {}
+    
+    private string _key;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = true, Name=@"key", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string key
+    {
+      get { return _key; }
+      set { _key = value; }
+    }
+    private string _value = "";
+    [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"value", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue("")]
+    public string value
+    {
+      get { return _value; }
+      set { _value = value; }
+    }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }

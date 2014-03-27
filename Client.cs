@@ -239,6 +239,7 @@ namespace Riemann {
                 if(protoEvent.tags.Count == 0)
 				    protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
+
 			}
 
 			var array = MessageBytes(message);

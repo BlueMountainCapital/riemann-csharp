@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using ProtoBuf;
 using Riemann.Proto;
+using Attribute = Riemann.Proto.Attribute;
 
 namespace Riemann {
 	///
@@ -151,7 +152,7 @@ namespace Riemann {
 					tick.NextTick = tick.NextTick - 1;
 					if (tick.NextTick <= 0) {
 						var t = tick.Tick();
-						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime * 2));
+						events.Add(new Event(_host, tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime * 2));
 						tick.NextTick = tick.TickTime;
 					}
 				}
@@ -214,17 +215,21 @@ namespace Riemann {
 					tags = _tag.Tags.ToList();
 				}
 			}
+
+
 			var protoEvents = events.Select(
-				e =>  {
-                    var evnt = new Proto.Event
+				e => {
+				    var evnt = new Proto.Event
                     {
-                        host = _name,
+                        host = e.Host,
                         service = e.Service,
                         state = e.State,
                         description = e.Description,
                         metric_f = e.Metric,
-                        ttl = e.TTL
+                        ttl = e.TTL,                                            
                     };
+				    evnt.attributes.AddRange(
+                        e.Attributes.Select(a => new Attribute {key = a.Key, value = a.Value}));				    
                     evnt.tags.AddRange(e.Tags);
                     return evnt;
 				}).ToList();
@@ -234,7 +239,9 @@ namespace Riemann {
                 if(protoEvent.tags.Count == 0)
 				    protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
+
 			}
+
 			var array = MessageBytes(message);
 
 		    if (_useTcp) {
@@ -269,21 +276,22 @@ namespace Riemann {
 			}
 		}
 
-		///
-		/// <summary>Send a single event to Riemann.</summary>
-		/// <param name='service'>Name of the service to push.</param>
-		/// <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
-		/// <param name='description'>
-		/// A description of the current state, if applicable.
-		/// Use null or an empty string to denote no additional information.
-		/// </param>
-		/// <param name='metric'>A value related to the service.</param>
-		/// <param name='ttl'>Number of seconds this event will be applicable for.</param>
-        /// <param name="tags">List of tags to associate with this event</param>
-		///
-        public void SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null)
+	    /// 
+	    ///  <summary>Send a single event to Riemann.</summary>
+	    ///  <param name="host">Originating server</param>
+	    ///  <param name='service'>Name of the service to push.</param>
+	    ///  <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
+	    ///  <param name='description'>
+	    ///  A description of the current state, if applicable.
+	    ///  Use null or an empty string to denote no additional information.
+	    ///  </param>
+	    ///  <param name='metric'>A value related to the service.</param>
+	    ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
+	    ///  <param name="tags">List of tags to associate with this event</param>
+	    /// <param name="attributes">Optional arbitrary custom name/value content</param>
+	    public void SendEvent(string host, string service, string state, string description, float metric, int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
         {
-			var ev = new Event(service, state, description, metric, ttl, tags);
+			var ev = new Event(host, service, state, description, metric, ttl, tags, attributes);
 			SendEvents(new[] {ev});
 		}
 

@@ -151,8 +151,13 @@ namespace Riemann {
 					tick.NextTick = tick.NextTick - 1;
 					if (tick.NextTick <= 0) {
 						var t = tick.Tick();
-						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, tick.TickTime * 2));
-						tick.NextTick = tick.TickTime;
+					    var tickTags = new List<string>();
+					    if (t.Tags != null)
+					    {
+					        tickTags.AddRange(t.Tags);
+					    }
+						events.Add(new Event(tick.Service, t.State, t.Description, t.MetricValue, t.TTL.HasValue ? t.TTL.Value : tick.TickTime * 2, tickTags));
+						tick.NextTick = tick.TickTime;  
 					}
 				}
 				if (removals.Count > 0) {
@@ -231,8 +236,7 @@ namespace Riemann {
 
 			var message = new Proto.Msg();
 			foreach (var protoEvent in protoEvents) {
-                if(protoEvent.tags.Count == 0)
-				    protoEvent.tags.AddRange(tags);
+				protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
 			}
 			var array = MessageBytes(message);

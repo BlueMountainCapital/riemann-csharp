@@ -45,6 +45,21 @@ namespace Riemann {
         /// <summary> Custom name/value pairs of attributes </summary>
 	    public readonly Dictionary<string, string> Attributes;
 
+
+        ///  <summary>Constructs an event</summary>
+        ///  <param name="service">Service name</param>
+        ///  <param name="state">Current status of the service.</param>
+        ///  <param name="description">Additional details regarding the state of the service.</param>
+        ///  <param name="metric">A value which represents the state of the service.</param>
+        ///  <param name="ttl">Amount of time the value will stay valid for a service.</param>
+        ///  <param name="tags">List of tags to associate with this event</param>
+        /// <param name="attributes">Any custom data for the event, as name/value pairs</param>
+        /// <exception cref="ArgumentException">Length of state is more than 255 characters.</exception>
+        public Event(string service, string state, string description, float metric, int ttl = 0,
+                     List<string> tags = null, Dictionary<string, string> attributes = null) : 
+            this(null, service, state, description, metric, ttl, tags, attributes) {
+        }
+
 	    ///  <summary>Constructs an event</summary>
 	    ///  <param name="host">Originiating server</param>
 	    ///  <param name="service">Service name</param>

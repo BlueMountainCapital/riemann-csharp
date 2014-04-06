@@ -276,7 +276,24 @@ namespace Riemann {
 			}
 		}
 
-	    /// 
+        ///  <summary>Send a single event to Riemann; assumes that the local host originated the event</summary>
+        ///  <param name='service'>Name of the service to push.</param>
+        ///  <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
+        ///  <param name='description'>
+        ///  A description of the current state, if applicable.
+        ///  Use null or an empty string to denote no additional information.
+        ///  </param>
+        ///  <param name='metric'>A value related to the service.</param>
+        ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
+        ///  <param name="tags">List of tags to associate with this event</param>
+        /// <param name="attributes">Optional arbitrary custom name/value content</param>
+        public void SendEvent(string service, string state, string description, float metric, 
+                              int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
+        {
+            SendEvent(null, service, state, description, metric, ttl, tags, attributes);
+        }
+
+
 	    ///  <summary>Send a single event to Riemann.</summary>
 	    ///  <param name="host">Originating server</param>
 	    ///  <param name='service'>Name of the service to push.</param>
@@ -289,7 +306,8 @@ namespace Riemann {
 	    ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
 	    ///  <param name="tags">List of tags to associate with this event</param>
 	    /// <param name="attributes">Optional arbitrary custom name/value content</param>
-	    public void SendEvent(string host, string service, string state, string description, float metric, int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
+	    public void SendEvent(string host, string service, string state, string description, float metric,
+                              int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
         {
 			var ev = new Event(host, service, state, description, metric, ttl, tags, attributes);
 			SendEvents(new[] {ev});

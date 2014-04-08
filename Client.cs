@@ -226,7 +226,7 @@ namespace Riemann {
 				e => {
 				    var evnt = new Proto.Event
                     {
-                        host = e.Host,
+                        host = e.Host ?? _name,
                         service = e.Service,
                         state = e.State,
                         description = e.Description,

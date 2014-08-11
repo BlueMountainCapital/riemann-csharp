@@ -86,7 +86,6 @@ namespace Riemann {
 			_throwExceptionsOnTicks = throwExceptionOnTicks;
 			_useTcp = useTcp;
 
-			OpenTcpConnectionUnsafe();
 			OpenUdpConnection();
 
 			_cancellationTokenSource = new CancellationTokenSource();

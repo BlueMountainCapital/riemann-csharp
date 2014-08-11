@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using ProtoBuf;
 using Riemann.Proto;
 using Attribute = Riemann.Proto.Attribute;
@@ -51,6 +52,20 @@ namespace Riemann {
 		private readonly bool _throwExceptionsOnTicks;
 	    private readonly bool _useTcp;
 
+		private readonly CancellationTokenSource _cancellationTokenSource;
+
+		public enum State
+		{
+			Disconnected,
+			Connecting,
+			Connected,
+			Disconnecting
+		};
+
+		public bool SuppressSendErrors { get; set; }
+
+		public State ConnectionState = State.Disconnected;
+
 		private static string GetFqdn() {
 			var properties = IPGlobalProperties.GetIPGlobalProperties();
 			return string.Format("{0}.{1}", properties.HostName, properties.DomainName);
@@ -63,15 +78,41 @@ namespace Riemann {
 		/// <param name='throwExceptionOnTicks'>Throw an exception on the background thread managing the TickEvents. Default: true</param>
 		/// <param name="useTcp">Use TCP for transport (UDP otherwise). Default: false</param>
 		///
-		public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true, bool useTcp = false) {
-			_writer = new Lazy<Stream>(MakeStream);
-			_datagram = new Lazy<Socket>(MakeDatagram);
+		public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true, bool useTcp = false)
+		{
+			SuppressSendErrors = true;
 			_host = host;
 			_port = (ushort)port;
 			_throwExceptionsOnTicks = throwExceptionOnTicks;
-		    _useTcp = useTcp;
+			_useTcp = useTcp;
+
+			OpenTcpConnectionUnsafe();
+			OpenUdpConnection();
+
+			_cancellationTokenSource = new CancellationTokenSource();
+			var token = _cancellationTokenSource.Token;
+
+			Task.Run(async () =>
+			{
+				while (!token.IsCancellationRequested)
+				{
+					try
+					{
+						lock (this)
+						{
+							if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
+							{
+								OpenTcpConnectionUnsafe();
+							}
+						}
+					}
+					catch (Exception) {}
+					await Task.Delay(5000);
+				}
+			}, token);
 		}
 
+		
 		///
 		/// <summary>Adds a tag to the current context (relative to this client). This call is not thread-safe.</summary>
 		/// <param name='tag'>New tag to add to the Riemann events sent using this client.</param>
@@ -182,28 +223,37 @@ namespace Riemann {
 			}
 		}
 
-		private readonly Lazy<Stream> _writer;
-		private readonly Lazy<Socket> _datagram;
+		private Socket _tcpSocket;
+		private Stream _tcpStream;
+		private Socket _udpSocket;
 		private const SocketError SocketErrorMessageTooLong = SocketError.MessageSize;
 
-		private Stream MakeStream() {
-			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			socket.Connect(_host, _port);
-			return new NetworkStream(socket, true);
+		private void OpenTcpConnectionUnsafe() {
+			
+			if (ConnectionState != State.Disconnected)
+			{
+				return;
+			}
+			try
+			{
+				ConnectionState = State.Connecting;
+				_tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				_tcpSocket.Connect(_host, _port);
+				ConnectionState = State.Connected;
+				_tcpStream = new NetworkStream(_tcpSocket, true);
+			}
+			catch (Exception)
+			{
+				_tcpSocket = null;
+				_tcpStream = null;
+				ConnectionState = State.Disconnected;
+			}
 		}
 
-		private Stream Stream {
-			get { return _writer.Value; }
-		}
-
-		private Socket MakeDatagram() {
+		private void OpenUdpConnection() {
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 			socket.Connect(_host, _port);
-			return socket;
-		}
-
-		private Socket Datagram {
-			get { return _datagram.Value; }
+			_udpSocket = socket;
 		}
 
 		///
@@ -220,7 +270,6 @@ namespace Riemann {
 					tags = _tag.Tags.ToList();
 				}
 			}
-
 
 			var protoEvents = events.Select(
 				e => {
@@ -239,38 +288,78 @@ namespace Riemann {
                     return evnt;
 				}).ToList();
 
-			var message = new Proto.Msg();
+			var message = new Msg();
 			foreach (var protoEvent in protoEvents) {
 				protoEvent.tags.AddRange(tags);
 				message.events.Add(protoEvent);
 
 			}
 
-			var array = MessageBytes(message);
-
-		    if (_useTcp) {
-		        WriteToStream(array);
-		        return;
-		    }
-
-			try {
-				Datagram.Send(array);
-			} catch (SocketException se) {
-				if (se.SocketErrorCode == SocketErrorMessageTooLong) {
-					WriteToStream(array);
-				} else {
-					throw;
+			if (_useTcp)
+			{
+				SendReceiveTcpMsg(message);
+			} 
+			else
+			{
+				try
+				{
+					SendUdpMessage(message);
+				}
+				catch (SocketException se)
+				{
+					if (se.SocketErrorCode == SocketErrorMessageTooLong)
+					{
+						SendReceiveTcpMsg(message);
+					}
+					else
+					{
+						throw;
+					}
 				}
 			}
 		}
 
-	    private void WriteToStream(Byte[] array) {
-            var x = BitConverter.GetBytes(array.Length);
-            Array.Reverse(x);
-            Stream.Write(x, 0, 4);
-            Stream.Write(array, 0, array.Length);
-            Stream.Flush();
-	    }
+		private void SendReceiveTcpMsg(Msg msg)
+		{
+			lock (this)
+			{
+				if (ConnectionState == State.Connected)
+				{
+					try
+					{
+						WriteMsgToStream(msg);
+						ReadReplyFromStream();
+					}
+					catch (IOException)
+					{
+						if (!_tcpSocket.Connected)
+						{
+							ConnectionState = State.Disconnected;
+							_tcpSocket = null;
+							_tcpStream = null;
+						}
+						if (!SuppressSendErrors)
+						{
+							throw;
+						}
+					}
+				} 
+				else if (!SuppressSendErrors)
+				{
+					throw new IOException("Not connected");
+				}
+			}
+		}
+
+		private void WriteMsgToStream(Msg msg)
+		{
+			Serializer.SerializeWithLengthPrefix(_tcpStream, msg, PrefixStyle.Fixed32BigEndian);
+		}
+
+		private void ReadReplyFromStream()
+		{
+			Serializer.DeserializeWithLengthPrefix<Msg>(_tcpStream, PrefixStyle.Fixed32BigEndian); 
+		}
 
 		private static byte[] MessageBytes(Msg message)
 		{
@@ -280,19 +369,24 @@ namespace Riemann {
 			}
 		}
 
-        ///  <summary>Send a single event to Riemann; assumes that the local host originated the event</summary>
-        ///  <param name='service'>Name of the service to push.</param>
-        ///  <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
-        ///  <param name='description'>
-        ///  A description of the current state, if applicable.
-        ///  Use null or an empty string to denote no additional information.
-        ///  </param>
-        ///  <param name='metric'>A value related to the service.</param>
-        ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
-        ///  <param name="tags">List of tags to associate with this event</param>
-        /// <param name="attributes">Optional arbitrary custom name/value content</param>
-        public void SendEvent(string service, string state, string description, float metric, 
-                              int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
+		private void SendUdpMessage(Msg message)
+		{
+			var bytes = MessageBytes(message);
+			_udpSocket.Send(bytes);
+		}
+
+		///  <summary>Send a single event to Riemann; assumes that the local host originated the event</summary>
+		/// <param name='service'>Name of the service to push.</param>
+		/// <param name='state'>State of the service; usual values are "ok", "critical", "warning"</param>
+		/// <param name='description'>
+		///     A description of the current state, if applicable.
+		///     Use null or an empty string to denote no additional information.
+		/// </param>
+		/// <param name='metric'>A value related to the service.</param>
+		/// <param name='ttl'>Number of seconds this event will be applicable for.</param>
+		/// <param name="tags">List of tags to associate with this event</param>
+		/// <param name="attributes">Optional arbitrary custom name/value content</param>
+		public void SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
         {
             SendEvent(null, service, state, description, metric, ttl, tags, attributes);
         }
@@ -325,8 +419,8 @@ namespace Riemann {
 		public IEnumerable<Proto.State> Query(string query) {
 			var q = new Proto.Query {@string = query};
 			var msg = new Proto.Msg {query = q};
-			Serializer.Serialize(Stream, msg);
-			var response = Serializer.Deserialize<Proto.Msg>(Stream);
+			Serializer.SerializeWithLengthPrefix(_tcpStream, msg, PrefixStyle.Fixed32BigEndian);
+			var response = Serializer.DeserializeWithLengthPrefix<Msg>(_tcpStream, PrefixStyle.Fixed32BigEndian);
 			if (response.ok) {
 				return response.states;
 			}
@@ -337,13 +431,16 @@ namespace Riemann {
 		/// <summary>Cleans up state related to this client.</summary>
 		///
 		public void Dispose() {
-			if (_writer.IsValueCreated) {
-				_writer.Value.Close();
-				_writer.Value.Dispose();
+
+			_cancellationTokenSource.Cancel();
+
+			if (_tcpStream != null) {
+				_tcpStream.Close();
+				_tcpStream.Dispose();
 			}
-			if (_datagram.IsValueCreated) {
-				_datagram.Value.Close();
-				_datagram.Value.Dispose();
+			if (_udpSocket != null) {
+				_udpSocket.Close();
+				_udpSocket.Dispose();
 			}
 			GC.SuppressFinalize(this);
 		}

@@ -432,7 +432,10 @@ namespace Riemann {
 		///
 		public void Dispose() {
 
-			_cancellationTokenSource.Cancel();
+			if (_cancellationTokenSource != null)
+			{
+				_cancellationTokenSource.Cancel();
+			}
 
 			if (_tcpStream != null) {
 				_tcpStream.Close();

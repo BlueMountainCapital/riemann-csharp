@@ -25,7 +25,7 @@ namespace RiemannClientTests
 		{
 			Console.WriteLine("MockServer Starting");
 			_isStopped.Reset();
-			_tcpListener = new TcpListener(IPAddress.Loopback, 5555);
+			_tcpListener = new TcpListener(IPAddress.Loopback, 5558);
 			_tcpListener.Start();
 			Console.WriteLine("MockServer Started. Beginning accept...");
 			_tcpListener.BeginAcceptTcpClient(ClientConnected, _tcpListener);				

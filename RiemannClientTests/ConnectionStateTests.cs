@@ -20,7 +20,7 @@ namespace RiemannClientTests
 		public void Setup()
 		{
 			_server = new MockServer();
-			_client = new Client("localhost", 5555, false, true);
+			_client = new Client("localhost", 5558, false, true);
 			_client.SuppressSendErrors = false;
 		}
 

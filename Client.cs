@@ -82,36 +82,41 @@ namespace Riemann {
 		{
 			SuppressSendErrors = true;
 			_host = host;
-			_port = (ushort)port;
+			_port = (ushort) port;
 			_throwExceptionsOnTicks = throwExceptionOnTicks;
 			_useTcp = useTcp;
 
-			OpenUdpConnection();
-
-			_cancellationTokenSource = new CancellationTokenSource();
-			var token = _cancellationTokenSource.Token;
-
-			Task.Run(async () =>
+			if (_useTcp)
 			{
-				while (!token.IsCancellationRequested)
+				_cancellationTokenSource = new CancellationTokenSource();
+				var token = _cancellationTokenSource.Token;
+
+				Task.Run(async () =>
 				{
-					try
+					while (!token.IsCancellationRequested)
 					{
-						lock (this)
+						try
 						{
-							if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
+							lock (this)
 							{
-								OpenTcpConnectionUnsafe();
+								if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
+								{
+									OpenTcpConnectionUnsafe();
+								}
 							}
 						}
+						catch (Exception) {}
+						await Task.Delay(5000);
 					}
-					catch (Exception) {}
-					await Task.Delay(5000);
-				}
-			}, token);
+				}, token);
+			} 
+			else
+			{
+				OpenUdpConnection();
+			}
 		}
 
-		
+
 		///
 		/// <summary>Adds a tag to the current context (relative to this client). This call is not thread-safe.</summary>
 		/// <param name='tag'>New tag to add to the Riemann events sent using this client.</param>
@@ -300,21 +305,7 @@ namespace Riemann {
 			} 
 			else
 			{
-				try
-				{
-					SendUdpMessage(message);
-				}
-				catch (SocketException se)
-				{
-					if (se.SocketErrorCode == SocketErrorMessageTooLong)
-					{
-						SendReceiveTcpMsg(message);
-					}
-					else
-					{
-						throw;
-					}
-				}
+				SendUdpMessage(message);
 			}
 		}
 
@@ -370,8 +361,18 @@ namespace Riemann {
 
 		private void SendUdpMessage(Msg message)
 		{
-			var bytes = MessageBytes(message);
-			_udpSocket.Send(bytes);
+			try
+			{
+				var bytes = MessageBytes(message);
+				_udpSocket.Send(bytes);
+			}
+			catch (Exception)
+			{
+				if (!SuppressSendErrors)
+				{
+					throw;
+				}
+			}
 		}
 
 		///  <summary>Send a single event to Riemann; assumes that the local host originated the event</summary>

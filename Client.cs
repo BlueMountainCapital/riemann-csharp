@@ -16,6 +16,7 @@ namespace Riemann {
 	///
 	public class Client : IDisposable, IClient
 	{
+        private readonly DateTime _unixStart = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
 		private RiemannTags _tag;
 		private readonly object _tagLock = new object();
 
@@ -260,6 +261,10 @@ namespace Riemann {
 			_udpSocket = socket;
 		}
 
+	    private long ToUnixTimestamp(DateTime time)
+	    {
+            return (long)(time.ToUniversalTime() - _unixStart).Ticks / TimeSpan.TicksPerSecond;
+	    }
 		///
 		/// <summary>Send many events to Riemann at once.</summary>
 		/// <param name="events">
@@ -284,7 +289,8 @@ namespace Riemann {
                         state = e.State,
                         description = e.Description,
                         metric_f = e.Metric,
-                        ttl = e.TTL
+                        ttl = e.TTL,
+                        time = ToUnixTimestamp(e.Time)
                     };
 				    evnt.attributes.AddRange(
                         e.Attributes.Select(a => new Attribute {key = a.Key, value = a.Value}));				    

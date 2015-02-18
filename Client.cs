@@ -263,7 +263,7 @@ namespace Riemann {
 
 	    private long ToUnixTimestamp(DateTime time)
 	    {
-            return (long)(time.ToUniversalTime() - _unixStart).Ticks / TimeSpan.TicksPerSecond;
+            return (long)(time.ToUniversalTime() - _unixStart).TotalSeconds;
 	    }
 		///
 		/// <summary>Send many events to Riemann at once.</summary>

@@ -5,8 +5,14 @@ namespace Riemann {
 	///
 	/// <summary>Represents a single event ready to send to Riemann.</summary>
 	///
-	public struct Event {
-	        ///
+	public struct Event
+	{
+	    ///
+	    /// <summary>Timestamp for event</summary>
+	    ///
+        public readonly DateTime Time;
+
+        ///
 		/// <summary>This is the service we are reporting events about.</summary>
 		///
 		public readonly string Service;
@@ -83,6 +89,7 @@ namespace Riemann {
 			TTL = ttl;
 		    Tags = tags ?? new List<string>();
 	        Attributes = attributes ?? new Dictionary<string, string>();
-	    }
+	        Time = DateTime.UtcNow;
+        }
 	}
 }

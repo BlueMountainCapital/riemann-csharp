@@ -9,10 +9,10 @@
     <projectUrl>http://github.com/BlueMountainCapital/riemann-csharp</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A simple Riemann driver for C#</description>
-    <copyright>Copyright 2013</copyright>
+    <copyright>Copyright 2013-2015</copyright>
     <tags>Riemann metrics</tags>
     <dependencies>
-      <dependency id="protobuf-net" version="2.0.0.480" />
+      <dependency id="protobuf-net" version="2.0.0.668" />
     </dependencies>
   </metadata>
   <files>
